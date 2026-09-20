@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Decathlon Index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:         #0D1117;
+    --surface:    #161B22;
+    --border:     #21262D;
+    --text:       #E6EDF3;
+    --muted:      #8B949E;
+    --accent:     #3B82F6;
+    --accent-dim: #1D3A6E;
+    --amber:      #F59E0B;
+    --amber-dim:  #3D2A00;
+    --green:      #34D399;
+    --green-dim:  #052E1C;
+    --row-hover:  #1C2128;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 56px 40px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 {
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 600;
+    line-height: 1.15;
+    max-width: 640px;
+    margin-bottom: 12px;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    color: var(--amber);
+  }
+
+  .hero-sub {
+    color: var(--muted);
+    max-width: 520px;
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 40px;
+    margin-top: 32px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+
+  .stat-item { display: flex; flex-direction: column; gap: 2px; }
+
+  .stat-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .stat-label { font-size: 12px; color: var(--muted); }
+
+  /* ── Controls ── */
+  .controls {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 40px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .control-group { display: flex; flex-direction: column; gap: 4px; }
+  .control-label { font-size: 11px; color: var(--muted); }
+
+  select, input[type="range"] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  select:hover, select:focus { border-color: var(--accent); }
+
+  input[type="range"] {
+    padding: 0;
+    width: 140px;
+    accent-color: var(--amber);
+  }
+
+  .walk-filter-row { display: flex; align-items: center; gap: 10px; }
+
+  .walk-threshold-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--amber);
+    min-width: 56px;
+  }
+
+  .walkable-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--amber-dim);
+    color: var(--amber);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .reset-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    margin-left: auto;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .reset-btn:hover { border-color: var(--text); color: var(--text); }
+
+  /* ── Table wrapper ── */
+  .table-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 40px 60px;
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 12px;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    user-select: none;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  thead th:hover { color: var(--text); }
+
+  thead th.sorted { color: var(--accent); }
+
+  thead th .sort-icon {
+    display: inline-block;
+    margin-left: 4px;
+    opacity: 0.4;
+    font-size: 10px;
+  }
+  thead th.sorted .sort-icon { opacity: 1; }
+
+  thead th.num { text-align: right; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  tbody tr:hover { background: var(--row-hover); }
+
+  tbody tr.walkable { background: var(--green-dim); }
+  tbody tr.walkable:hover { background: #073D25; }
+
+  tbody tr.far { background: var(--amber-dim); }
+  tbody tr.far:hover { background: #4A3300; }
+
+  td {
+    padding: 11px 14px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  td.num {
+    text-align: right;
+    font-family: 'DM Mono', monospace;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  td.num.sorted-col { color: var(--accent); }
+
+  .rank-badge {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    min-width: 20px;
+  }
+
+  .country-tag {
+    display: inline-block;
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--border);
+    border-radius: 3px;
+    padding: 1px 6px;
+  }
+
+  .walkable-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 60px 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+    color: var(--muted);
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .download-links { display: flex; gap: 8px; }
+
+  .dl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 5px;
+    padding: 4px 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .dl-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  @media (max-width: 640px) {
+    .hero, .controls, .table-wrap, .footer { padding-left: 16px; padding-right: 16px; }
+    .hero-stats { gap: 24px; flex-wrap: wrap; }
+    .reset-btn { margin-left: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <p class="hero-eyebrow">The Decathlon Index — Europe</p>
+  <h1>Can you walk from the station<br>to your nearest <em>Decathlon?</em></h1>
+  <p class="hero-sub">Driving and walking distances from each city's central train station to its
+    nearest Decathlon store, across Europe.</p>
+  <p class="hero-sub">You heard of the Bigmac Index, now we have the Decathlon Index, a simple
+    measure of walkability in a city. Where does your city rank, a grass green walkable paradise
+    or sewer brown car dominated concrete jungle?</p>
+  <p class="hero-sub">Do your city leaders live by their stated priorities? Is your transport hierarchy aligned with their public commitments?</p>
+  <p class="hero-sub">These are the stats for 2026. We will re-visit in a year and see whats changed.</p>
+  <div class="hero-stats">
+    <div class="stat-item">
+      <span class="stat-num" id="stat-cities">—</span>
+      <span class="stat-label">cities with a store</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num" id="stat-countries">—</span>
+      <span class="stat-label">countries</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num" id="stat-walkable">—</span>
+      <span class="stat-label">walkable in ≤30 min 🟢</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num" id="stat-closest">—</span>
+      <span class="stat-label">shortest walk (min)</span>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="control-group">
+    <span class="control-label">Country</span>
+    <select id="country-filter">
+      <option value="">All countries</option>
+    </select>
+  </div>
+
+  <div class="control-group">
+    <span class="control-label">Max walking time</span>
+    <div class="walk-filter-row">
+      <input type="range" id="walk-slider" min="0" max="180" step="5" value="180">
+      <span class="walk-threshold-val" id="walk-val">Any</span>
+    </div>
+  </div>
+
+  <button class="reset-btn" id="reset-btn">Reset filters</button>
+</div>
+
+<div class="table-wrap">
+  <table id="main-table">
+    <thead>
+      <tr>
+        <th data-col="rank" class="sorted">Rank <span class="sort-icon">↑</span></th>
+        <th data-col="city">City <span class="sort-icon">↕</span></th>
+        <th data-col="country">Country <span class="sort-icon">↕</span></th>
+        <th data-col="drive_km" class="num">Drive km <span class="sort-icon">↕</span></th>
+        <th data-col="drive_min" class="num">Drive min <span class="sort-icon">↕</span></th>
+        <th data-col="walk_km" class="num">Walk km <span class="sort-icon">↕</span></th>
+        <th data-col="walk_min" class="num">Walk min <span class="sort-icon">↕</span></th>
+        <th data-col="straight_km" class="num">Straight km <span class="sort-icon">↕</span></th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+  <div class="no-results" id="no-results" style="display:none">No cities match the current filters.</div>
+</div>
+
+<div class="footer">
+  <span>Distances via OSRM · Locations via OpenStreetMap Nominatim</span>
+  <div class="download-links">
+    <a class="dl-btn" id="dl-csv" download="decathlon_index.csv">↓ CSV</a>
+    <a class="dl-btn" id="dl-json" download="decathlon_index.json">↓ JSON</a>
+  </div>
+  <span id="footer-date"></span>
+</div>
+
+<script src="decathlon_data.js"></script>
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let sortCol = "rank";
+let sortAsc = true;
+let filterCountry = "";
+let walkMax = Infinity;
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", () => {
+  buildCountryFilter();
+  updateHeroStats();
+  render();
+  document.getElementById("footer-date").textContent =
+    "Generated " + new Date().toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" });
+
+  buildDownloadLinks();
+
+  // Sort on header click
+  document.querySelectorAll("thead th[data-col]").forEach(th => {
+    th.addEventListener("click", () => {
+      const col = th.dataset.col;
+      if (sortCol === col) { sortAsc = !sortAsc; }
+      else { sortCol = col; sortAsc = true; }
+      render();
+    });
+  });
+
+  // Country filter
+  document.getElementById("country-filter").addEventListener("change", e => {
+    filterCountry = e.target.value;
+    render();
+  });
+
+  // Walk slider
+  const slider = document.getElementById("walk-slider");
+  const walkVal = document.getElementById("walk-val");
+  slider.addEventListener("input", () => {
+    const v = parseInt(slider.value);
+    walkMax = v >= 180 ? Infinity : v;
+    walkVal.textContent = walkMax === Infinity ? "Any" : walkMax + " min";
+    render();
+  });
+
+  // Reset
+  document.getElementById("reset-btn").addEventListener("click", () => {
+    filterCountry = "";
+    walkMax = Infinity;
+    sortCol = "rank";
+    sortAsc = true;
+    document.getElementById("country-filter").value = "";
+    slider.value = 180;
+    walkVal.textContent = "Any";
+    render();
+  });
+});
+
+// ── BUILD COUNTRY DROPDOWN ────────────────────────────────────────────────────
+function buildCountryFilter() {
+  const countries = [...new Set(DATA.map(d => d.country))].sort();
+  const sel = document.getElementById("country-filter");
+  countries.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c;
+    opt.textContent = c;
+    sel.appendChild(opt);
+  });
+}
+
+// ── HERO STATS ────────────────────────────────────────────────────────────────
+function updateHeroStats() {
+  const countries = new Set(DATA.map(d => d.country)).size;
+  const walkable  = DATA.filter(d => d.walk_min <= 30).length;
+  const closest   = Math.min(...DATA.map(d => d.walk_min));
+  document.getElementById("stat-cities").textContent    = DATA.length;
+  document.getElementById("stat-countries").textContent = countries;
+  document.getElementById("stat-walkable").textContent  = walkable;
+  document.getElementById("stat-closest").textContent   = closest;
+}
+
+// ── DOWNLOAD LINKS ────────────────────────────────────────────────────────────
+function buildDownloadLinks() {
+  // CSV
+  const csvHeader = "country,rank_in_country,city,drive_km,drive_min,walk_km,walk_min,straight_km";
+  const csvRows = DATA.map(d =>
+    [d.country, d.rank, d.city, d.drive_km, d.drive_min, d.walk_km, d.walk_min, d.straight_km].join(",")
+  );
+  const csvBlob = new Blob([[csvHeader, ...csvRows].join("\n")], { type: "text/csv" });
+  document.getElementById("dl-csv").href = URL.createObjectURL(csvBlob);
+
+  // JSON
+  const jsonBlob = new Blob([JSON.stringify(DATA, null, 2)], { type: "application/json" });
+  document.getElementById("dl-json").href = URL.createObjectURL(jsonBlob);
+}
+
+function render() {
+  // Filter
+  let rows = DATA.filter(d => {
+    if (filterCountry && d.country !== filterCountry) return false;
+    if (walkMax !== Infinity && d.walk_min > walkMax) return false;
+    return true;
+  });
+
+  // Sort
+  rows.sort((a, b) => {
+    let av = a[sortCol === "rank" ? "rank" : sortCol];
+    let bv = b[sortCol === "rank" ? "rank" : sortCol];
+    if (typeof av === "string") return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+    return sortAsc ? av - bv : bv - av;
+  });
+
+  // Update header indicators
+  document.querySelectorAll("thead th[data-col]").forEach(th => {
+    const isNum = th.classList.contains("num");
+    const active = th.dataset.col === sortCol;
+    th.classList.toggle("sorted", active);
+    th.querySelector(".sort-icon").textContent = active
+      ? (sortAsc ? "↑" : "↓")
+      : "↕";
+  });
+
+  // Highlight sorted numeric column
+  const numCols = { drive_km: 3, drive_min: 4, walk_km: 5, walk_min: 6, straight_km: 7 };
+  const sortedNumIdx = numCols[sortCol];
+
+  // Render rows
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = "";
+
+  rows.forEach(d => {
+    const walkable = d.walk_min <= 30;
+    const far = d.walk_min > 60;
+    const tr = document.createElement("tr");
+    if (walkable) tr.classList.add("walkable");
+    if (far) tr.classList.add("far");
+
+    tr.innerHTML = `
+      <td><span class="rank-badge">${d.rank}</span></td>
+      <td>${walkable ? '<span class="walkable-dot"></span>' : ''}${d.city}</td>
+      <td><span class="country-tag">${d.country}</span></td>
+      <td class="num${sortedNumIdx === 3 ? ' sorted-col' : ''}">${d.drive_km.toFixed(1)}</td>
+      <td class="num${sortedNumIdx === 4 ? ' sorted-col' : ''}">${d.drive_min.toFixed(0)}</td>
+      <td class="num${sortedNumIdx === 5 ? ' sorted-col' : ''}">${d.walk_km.toFixed(1)}</td>
+      <td class="num${sortedNumIdx === 6 ? ' sorted-col' : ''}">${d.walk_min.toFixed(0)}</td>
+      <td class="num${sortedNumIdx === 7 ? ' sorted-col' : ''}">${d.straight_km.toFixed(1)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const noResults = document.getElementById("no-results");
+  const table = document.getElementById("main-table");
+  noResults.style.display = rows.length === 0 ? "block" : "none";
+  table.style.display = rows.length === 0 ? "none" : "";
+}
+</script>
+</body>
+</html>
