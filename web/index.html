@@ -65,8 +65,9 @@
     color: var(--muted);
     max-width: 520px;
     font-size: 14px;
-    margin-bottom: 8px;
+    margin-top: 10px;
   }
+  .hero-sub:first-of-type { margin-top: 0; }
 
   .hero-stats {
     display: flex;
@@ -130,6 +131,13 @@
     min-width: 56px;
   }
 
+  .walk-city-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    min-width: 60px;
+  }
+
   .walkable-badge {
     display: inline-flex;
     align-items: center;
@@ -170,20 +178,18 @@
     font-size: 13px;
   }
 
-  thead th {
-    position: sticky;
-    top: 0;
-    background: var(--surface);
-    color: var(--muted);
-    font-weight: 500;
-    font-size: 12px;
-    padding: 10px 14px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-    user-select: none;
-    cursor: pointer;
-    transition: color 0.15s;
+  thead th { position: sticky; top: 0; background: var(--surface); color: var(--muted); font-weight: 500; font-size: 12px; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; user-select: none; cursor: pointer; transition: color 0.15s; }
+
+  th[data-col="rank"]    { width: 48px;  padding-right: 8px; }
+  th[data-col="city"]    { width: 110px; }
+  th[data-col="country"] { width: 110px; }
+
+  td[data-col="rank"]    { padding-right: 8px; }
+
+  @media (max-width: 768px) {
+    th[data-col="city"], th[data-col="country"] { width: 90px; }
+    td { padding: 11px 8px; }
+    thead th { padding: 10px 8px; }
   }
 
   thead th:hover { color: var(--text); }
@@ -311,13 +317,10 @@
 <div class="hero">
   <p class="hero-eyebrow">The Decathlon Index — Europe</p>
   <h1>Can you walk from the station<br>to your nearest <em>Decathlon?</em></h1>
-  <p class="hero-sub">Driving and walking distances from each city's central train station to its
-    nearest Decathlon store, across Europe.</p>
-  <p class="hero-sub">You heard of the Bigmac Index, now we have the Decathlon Index, a simple
-    measure of walkability in a city. Where does your city rank, a grass green walkable paradise
-    or sewer brown car dominated concrete jungle?</p>
-  <p class="hero-sub">Do your city leaders live by their stated priorities? Is your transport hierarchy aligned with their public commitments?</p>
-  <p class="hero-sub">This is the data for 2026. We will re-visit in a year and see whats changed.</p>
+  <p class="hero-sub">Driving and walking distances from each city's central train station to its nearest Decathlon store, across Europe.</p>
+  <p class="hero-sub">You heard of the Bigmac Index, now we have the Decathlon Index, a simple measure of walkability in a city.</p>
+  <p class="hero-sub">Where does your city rank, a grass green walkable paradise or sewer brown car dominated concrete jungle? Do your city leaders live by their stated priorities? Is your transport hierarchy aligned with their public commitments?</p>
+  <p class="hero-sub">This is the data for 2026. We will re-visit in a year and see what's changed.</p>
   <div class="hero-stats">
     <div class="stat-item">
       <span class="stat-num" id="stat-cities">—</span>
@@ -351,6 +354,7 @@
     <div class="walk-filter-row">
       <input type="range" id="walk-slider" min="0" max="180" step="5" value="180">
       <span class="walk-threshold-val" id="walk-val">Any</span>
+      <span class="walk-city-count" id="walk-city-count"></span>
     </div>
   </div>
 
@@ -361,13 +365,13 @@
   <table id="main-table">
     <thead>
       <tr>
-        <th data-col="rank" class="sorted">Rank <span class="sort-icon">↑</span></th>
+        <th data-col="rank">Rank <span class="sort-icon">↕</span></th>
         <th data-col="city">City <span class="sort-icon">↕</span></th>
         <th data-col="country">Country <span class="sort-icon">↕</span></th>
         <th data-col="drive_km" class="num">Drive km <span class="sort-icon">↕</span></th>
         <th data-col="drive_min" class="num">Drive min <span class="sort-icon">↕</span></th>
         <th data-col="walk_km" class="num">Walk km <span class="sort-icon">↕</span></th>
-        <th data-col="walk_min" class="num">Walk min <span class="sort-icon">↕</span></th>
+        <th data-col="walk_min" class="num sorted">Walk min <span class="sort-icon">↑</span></th>
         <th data-col="straight_km" class="num">Straight km <span class="sort-icon">↕</span></th>
       </tr>
     </thead>
@@ -377,7 +381,7 @@
 </div>
 
 <div class="footer">
-  <span>Distances via OSRM · Locations via OpenStreetMap Nominatim</span>
+  <span>Distances via OSRM · Locations via OpenStreetMap Nominatim · <a href="https://github.com/sbarlster/decathaindex" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:none;border-bottom:1px solid var(--border);" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">GitHub</a></span>
   <div class="download-links">
     <a class="dl-btn" id="dl-csv" download="decathlon_index.csv">↓ CSV</a>
     <a class="dl-btn" id="dl-json" download="decathlon_index.json">↓ JSON</a>
@@ -388,7 +392,7 @@
 <script src="decathlon_data.js"></script>
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let sortCol = "rank";
+let sortCol = "walk_min";
 let sortAsc = true;
 let filterCountry = "";
 let walkMax = Infinity;
@@ -422,10 +426,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Walk slider
   const slider = document.getElementById("walk-slider");
   const walkVal = document.getElementById("walk-val");
+  const walkCityCount = document.getElementById("walk-city-count");
   slider.addEventListener("input", () => {
     const v = parseInt(slider.value);
     walkMax = v >= 180 ? Infinity : v;
     walkVal.textContent = walkMax === Infinity ? "Any" : walkMax + " min";
+    const count = DATA.filter(d => walkMax === Infinity || d.walk_min <= walkMax).length;
+    walkCityCount.textContent = walkMax === Infinity ? "" : count + " " + (count === 1 ? "city" : "cities");
     render();
   });
 
@@ -433,11 +440,12 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("reset-btn").addEventListener("click", () => {
     filterCountry = "";
     walkMax = Infinity;
-    sortCol = "rank";
+    sortCol = "walk_min";
     sortAsc = true;
     document.getElementById("country-filter").value = "";
     slider.value = 180;
     walkVal.textContent = "Any";
+    walkCityCount.textContent = "";
     render();
   });
 });
@@ -522,7 +530,7 @@ function render() {
     if (far) tr.classList.add("far");
 
     tr.innerHTML = `
-      <td><span class="rank-badge">${d.rank}</span></td>
+      <td data-col="rank"><span class="rank-badge">${d.rank}</span></td>
       <td>${walkable ? '<span class="walkable-dot"></span>' : ''}${d.city}</td>
       <td><span class="country-tag">${d.country}</span></td>
       <td class="num${sortedNumIdx === 3 ? ' sorted-col' : ''}">${d.drive_km.toFixed(1)}</td>
