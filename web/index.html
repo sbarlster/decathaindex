@@ -443,6 +443,7 @@
   <table id="main-table">
     <thead>
       <tr>
+        <th data-col="#" style="width:36px;padding-right:4px;"># <span class="sort-icon"></span></th>
         <th data-col="rank">Rank <span class="sort-icon">↕</span></th>
         <th data-col="city">City <span class="sort-icon">↕</span></th>
         <th data-col="country">Country <span class="sort-icon">↕</span></th>
@@ -460,11 +461,19 @@
 
 <section id="about" class="about">
   <h2>About</h2>
-  <p>The Decathlon Index started when I arrived in Bilbao, found the weather to be surprisingly wet, needed an umbrella and realised that the local Decathlon store was only 3 minutes walk away, right in the centre of the city!!! In sharp contrast to my home city of Edinburgh where the majority of useful shops have been moved out to retail parks on the perimeter and fast roads.</p>
-  <p>At that point I started to think, was my city strange? Were things different in mainland Europe? Was the rest of the UK like this?</p>
-  <p>Decathlon sells umbrellas, but more importantly it sells the kind of everyday sporting goods that people need. Where a city puts that store says something about who the city is designed for. The Decathlon Index is a simple measure: how far is it to walk from your central train station to the nearest store?</p>
-  <p>Is your city placing cars and drivers ahead of pedestrians and in general, active travel?</p>
+
+  <h3>Background</h3>
+  <p>The Decathlon Index started when I arrived in Bilbao, found the weather to be surprisingly wet, needed an umbrella and realised that the local Decathlon store was only 3 minutes walk away, right in the centre of the city!!! In sharp contrast to my home city of Edinburgh where a whole bunch of shops have been moved out to retail parks on the perimeter and fast roads.</p>
+  <p>At that point I started to think, was my city strange and broken? Were things different in mainland Europe? Was the rest of the UK like this?</p>
+  <p>Decathlon sells umbrellas, but more importantly it sells the kind of everyday sports and recreation stuff that people actually need. Where a city puts that store says something about who the city is designed for. The Decathlon Index is a simple measure: how far is it to walk from your central train station to the nearest store?</p>
   <p>This is the 2026 data. We will re-visit in a year and see what's changed.</p>
+
+  <h3>Methodology</h3>
+  <p>Distances were calculated using the Open Source Routing Machine (OSRM) API, which uses OpenStreetMap data. The central train station and Decathlon store locations for each city were determined using the OpenStreetMap Nominatim API.</p>
+  <p>All data is available for download in CSV and JSON formats. Links are available in the footer.</p>
+
+  <h3>Contact</h3>
+  <p>Hi, I am Stuart Barlow a software developer, parent and long time resident of Edinburgh. I get about the city by car, bus, bike (now especially e-bike) and feet. If you have any questions or feedback about the Decathlon Index, please contact me at <a href="https://bsky.app/profile/sbarlster.bsky.social" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:none;border-bottom:1px solid var(--border);" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">sbarlster.bsky.social</a>.</p>
 </section>
 
 <div class="footer">
@@ -609,7 +618,7 @@ function render() {
   const tbody = document.getElementById("tbody");
   tbody.innerHTML = "";
 
-  rows.forEach(d => {
+  rows.forEach((d, i) => {
     const walkable = d.walk_min <= 30;
     const far = d.walk_min > 60;
     const tr = document.createElement("tr");
@@ -617,6 +626,7 @@ function render() {
     if (far) tr.classList.add("far");
 
     tr.innerHTML = `
+      <td style="width:36px;padding-right:4px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${i + 1}</td>
       <td data-col="rank"><span class="rank-badge">${d.rank}</span></td>
       <td>${walkable ? '<span class="walkable-dot"></span>' : ''}${d.city}</td>
       <td><span class="country-tag">${d.country}</span></td>
