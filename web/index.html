@@ -443,7 +443,7 @@
   <table id="main-table">
     <thead>
       <tr>
-        <th data-col="#" style="width:36px;padding-right:4px;"># <span class="sort-icon"></span></th>
+        <th data-col-noclick="#" style="width:36px;padding-right:4px;"># </th>
         <th data-col="rank">Rank <span class="sort-icon">↕</span></th>
         <th data-col="city">City <span class="sort-icon">↕</span></th>
         <th data-col="country">Country <span class="sort-icon">↕</span></th>
@@ -605,9 +605,8 @@ function render() {
     const isNum = th.classList.contains("num");
     const active = th.dataset.col === sortCol;
     th.classList.toggle("sorted", active);
-    th.querySelector(".sort-icon").textContent = active
-      ? (sortAsc ? "↑" : "↓")
-      : "↕";
+    const icon = th.querySelector(".sort-icon");
+    if (icon) icon.textContent = active ? (sortAsc ? "↑" : "↓") : "↕";
   });
 
   // Highlight sorted numeric column
