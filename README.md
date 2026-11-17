@@ -11,7 +11,7 @@ A simple dataset of 100 cities in Europe containing the distances from the main
 train station to the closest Decathlon store. Time to walk and time to drive. Ranked from grass green to car swewer poo brown.
 
 ## How to generate a fresh dataset
-Run the decadist.go file
+Run the decathaindex.go file
 ```
 go run .
 ```

@@ -9,6 +9,7 @@
 <meta property="og:title" content="Decathlon Index 2026">
 <meta property="og:description" content="Can you walk from the station to your nearest Decathlon? Driving and walking distances across 100 European cities. A simple measure of walkability — grass green paradise or car sewer brown?">
 <meta property="og:image" content="https://decathlonindex.app/preview.png">
+<meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:url" content="https://decathlonindex.app">
@@ -21,6 +22,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -392,10 +394,82 @@
   }
 
   @media (max-width: 640px) {
-    .hero, .controls, .table-wrap, .footer { padding-left: 16px; padding-right: 16px; }
+    .hero, .controls, .table-wrap, .footer, .map-section { padding-left: 16px; padding-right: 16px; }
+    #map-canvas { height: 340px; }
     .hero-stats { gap: 24px; flex-wrap: wrap; }
     .reset-btn { margin-left: 0; }
   }
+
+  /* ── Map ── */
+  .map-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 8px 40px 40px;
+    scroll-margin-top: 56px;
+  }
+
+  .map-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .map-head h2 { font-size: 16px; font-weight: 600; }
+
+  #map-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  #map-canvas {
+    height: 460px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+
+  .map-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .map-legend i {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .leaflet-container { font-family: 'Inter', sans-serif; background: var(--surface); }
+  .dark-tiles { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.5); }
+  .leaflet-bar a { background: var(--surface); color: var(--text); border-bottom-color: var(--border); }
+  .leaflet-bar a:hover { background: var(--row-hover); color: var(--text); }
+  .leaflet-control-attribution { background: rgba(13, 17, 23, 0.8) !important; color: var(--muted) !important; }
+  .leaflet-control-attribution a { color: var(--muted) !important; }
+
+  .dx-tip.leaflet-tooltip {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: none;
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 6px 9px;
+  }
+  .dx-tip.leaflet-tooltip-top:before { border-top-color: var(--border); }
+  .dx-tip .dx-sub { color: var(--muted); }
+  .dx-tip .dx-nums { font-family: 'DM Mono', monospace; font-size: 11.5px; }
 
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
@@ -419,6 +493,7 @@
     <span>Decathlon Index 2026</span>
   </a>
   <div class="nav-links">
+    <a href="#map" id="nav-map" class="nav-link">Map</a>
     <a href="#data" class="nav-link">Data</a>
     <a href="#about" class="nav-link">About</a>
   </div>
@@ -429,7 +504,7 @@
   <h1>Can you walk from the station<br>to your nearest <em>Decathlon?</em></h1>
   <p class="hero-sub">Driving and walking distances from each city's central train station to its nearest Decathlon store, across Europe.</p>
   <p class="hero-sub">You heard of the Bigmac Index, now we have the Decathlon Index, a simple measure of walkability in a city.</p>
-  <p class="hero-sub">Where does your city rank, a grass green walkable paradise or sewer brown car dominated concrete sprawl? Do your city leaders live by their stated priorities? Is your transport hierarchy aligned with their public commitments?</p>
+  <p class="hero-sub">Where does your city rank, a grass green walkable paradise or sewer brown car dominated concrete jungle? Do your city leaders live by their stated priorities? Is your transport hierarchy aligned with their public commitments?</p>
   <p class="hero-sub">This is the data for 2026. We will re-visit in a year and see what's changed.</p>
   <div class="hero-stats">
     <div class="stat-item">
@@ -450,6 +525,19 @@
     </div>
   </div>
 </div>
+
+<section id="map" class="map-section">
+  <div class="map-head">
+    <h2>Walking time, station to store</h2>
+    <span id="map-count"></span>
+  </div>
+  <div id="map-canvas" role="region" aria-label="Map of European cities coloured by walking time to the nearest Decathlon. The table below lists the same data."></div>
+  <div class="map-legend">
+    <span><i style="background:var(--green)"></i>walkable ≤30 min</span>
+    <span><i style="background:var(--muted)"></i>30–60 min</span>
+    <span><i style="background:var(--amber)"></i>car sewer &gt;60 min</span>
+  </div>
+</section>
 
 <div id="data" class="controls">
   <div class="control-group">
@@ -475,7 +563,7 @@
   <table id="main-table">
     <thead>
       <tr>
-        <th data-col-noclick="#" style="width:36px;padding-right:4px;"># </th>
+        <th data-col="#" style="width:36px;padding-right:4px;"># <span class="sort-icon"></span></th>
         <th data-col="rank">Rank <span class="sort-icon">↕</span></th>
         <th data-col="city">City <span class="sort-icon">↕</span></th>
         <th data-col="country">Country <span class="sort-icon">↕</span></th>
@@ -493,19 +581,10 @@
 
 <section id="about" class="about">
   <h2>About</h2>
-
-  <h3>Background</h3>
-  <p>The Decathlon Index started when I arrived in Bilbao, found the weather to be surprisingly wet, needed an umbrella and realised that the local Decathlon store was only 3 minutes walk away, right in the centre of the city!!! In sharp contrast to my home city of Edinburgh where a whole bunch of shops have been moved out to retail parks on the perimeter and fast roads.</p>
-  <p>At that point I started to think, was my city strange and broken? Were things different in mainland Europe? Was the rest of the UK like this?</p>
-  <p>Decathlon sells umbrellas, but more importantly it sells the kind of everyday sports and recreation stuff that people actually need. Where a city puts that store says something about who the city is designed for. The Decathlon Index is a simple measure: how far is it to walk from your central train station to the nearest store?</p>
+  <p>The Decathlon Index started when I arrived in Bilbao, found the weather to be surprisingly wet, needed an umbrella and realised that the local Decathlon store was only 3 minutes walk away, right in the centre of the city. In sharp contrast to my home city of Edinburgh where the majority of useful shops have been moved out to retail parks on the perimeter and fast roads.</p>
+  <p>At that point I started to think, was my city strange? Were things different in mainland Europe — was the rest of the UK like this?</p>
+  <p>Decathlon sells umbrellas, but more importantly it sells the kind of everyday sporting goods that people actually need. Where a city puts that store says something about who the city is designed for. The Decathlon Index is a simple, consistent, replicable measure: how far is it to walk from your central train station to the nearest store?</p>
   <p>This is the 2026 data. We will re-visit in a year and see what's changed.</p>
-
-  <h3>Methodology</h3>
-  <p>Distances were calculated using the Open Source Routing Machine (OSRM) API, which uses OpenStreetMap data. The central train station and Decathlon store locations for each city were determined using the OpenStreetMap Nominatim API.</p>
-  <p>All data is available for download in CSV and JSON formats. Links are available in the footer.</p>
-
-  <h3>Contact</h3>
-  <p>Hi, I am Stuart Barlow a software developer, parent and long time resident of Edinburgh. I get about the city by car, bus, bike (now especially e-bike) and feet. If you have any questions or feedback about the Decathlon Index, please contact me at <a href="https://bsky.app/profile/sbarlster.bsky.social" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:none;border-bottom:1px solid var(--border);" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">sbarlster.bsky.social</a>.</p>
 </section>
 
 <div class="footer">
@@ -517,6 +596,7 @@
   <span id="footer-date"></span>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="decathlon_data.js"></script>
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────────────
@@ -534,6 +614,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "Generated " + new Date().toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" });
 
   buildDownloadLinks();
+  initMap();
 
   // Sort on header click
   document.querySelectorAll("thead th[data-col]").forEach(th => {
@@ -674,6 +755,91 @@ function render() {
   const table = document.getElementById("main-table");
   noResults.style.display = rows.length === 0 ? "block" : "none";
   table.style.display = rows.length === 0 ? "none" : "";
+
+  updateMap(rows);
+}
+
+// ── MAP ───────────────────────────────────────────────────────────────────────
+const TIER_COLOURS = { walkable: "#34D399", mid: "#8B949E", far: "#F59E0B" };
+let mapState = null;
+
+function tierOf(d) {
+  return d.walk_min <= 30 ? "walkable" : d.walk_min > 60 ? "far" : "mid";
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+  ));
+}
+
+function initMap() {
+  const section = document.getElementById("map");
+  const located = DATA.filter(d => typeof d.lat === "number" && typeof d.lon === "number");
+
+  // No Leaflet (CDN blocked) or no coordinates in the data: hide the map, keep the page working.
+  if (typeof L === "undefined" || located.length === 0) {
+    section.style.display = "none";
+    document.getElementById("nav-map").style.display = "none";
+    if (located.length === 0) {
+      console.warn("Map hidden: DATA has no lat/lon. Re-run the Go script to regenerate decathlon_data.js.");
+    }
+    return;
+  }
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const map = L.map("map-canvas", {
+    scrollWheelZoom: false,          // don't hijack page scrolling; click the map to enable
+    dragging: !L.Browser.mobile,     // one-finger drag should scroll the page on phones
+    zoomAnimation: !reduceMotion,
+    minZoom: 3,
+    maxZoom: 12,
+  });
+
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    className: "dark-tiles",
+    maxZoom: 19,
+  }).addTo(map);
+
+  map.on("click", () => map.scrollWheelZoom.enable());
+  map.on("mouseout", () => map.scrollWheelZoom.disable());
+
+  const markers = new Map();
+  located.forEach(d => {
+    const colour = TIER_COLOURS[tierOf(d)];
+    const m = L.circleMarker([d.lat, d.lon], {
+      radius: 7,
+      color: "#0D1117",
+      weight: 1.5,
+      fillColor: colour,
+      fillOpacity: 0.9,
+    }).addTo(map);
+    m.bindTooltip(
+      `<strong>${esc(d.city)}</strong> <span class="dx-sub">${esc(d.country)}</span><br>` +
+      `<span class="dx-nums">Walk ${d.walk_min.toFixed(0)} min · Drive ${d.drive_min.toFixed(0)} min</span>`,
+      { className: "dx-tip", direction: "top", offset: [0, -6] }
+    );
+    markers.set(d.city, m);
+  });
+
+  map.fitBounds(L.latLngBounds(located.map(d => [d.lat, d.lon])), { padding: [24, 24] });
+
+  mapState = { map, markers, total: located.length };
+  render(); // sync the markers with the current table filters
+}
+
+function updateMap(rows) {
+  if (!mapState) return;
+  const visible = new Set(rows.map(d => d.city));
+  let shown = 0;
+  mapState.markers.forEach((m, city) => {
+    const on = visible.has(city);
+    if (on) shown++;
+    m.setStyle({ fillOpacity: on ? 0.9 : 0.12, opacity: on ? 1 : 0.2 });
+    if (on) m.bringToFront();
+  });
+  document.getElementById("map-count").textContent = shown + " of " + mapState.total + " cities";
 }
 </script>
 </body>

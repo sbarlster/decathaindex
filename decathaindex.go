@@ -538,6 +538,8 @@ type Result struct {
 	WalkMin    float64
 	StraightKm float64
 	Source     string
+	Lat        float64 // central station latitude, used for the website map
+	Lon        float64 // central station longitude
 }
 
 // sortResults returns a copy of results sorted by country name then walk time.
@@ -641,8 +643,8 @@ func writeResultsJS(path string, results []Result) error {
 			comma = ""
 		}
 		fmt.Fprintf(f,
-			"  { country: %q, rank: %d, city: %q, drive_km: %.1f, drive_min: %.0f, walk_km: %.1f, walk_min: %.0f, straight_km: %.1f }%s\n",
-			r.Country, rank, r.City, r.DriveKm, r.DriveMin, r.WalkKm, r.WalkMin, r.StraightKm, comma,
+			"  { country: %q, rank: %d, city: %q, drive_km: %.1f, drive_min: %.0f, walk_km: %.1f, walk_min: %.0f, straight_km: %.1f, lat: %.6f, lon: %.6f }%s\n",
+			r.Country, rank, r.City, r.DriveKm, r.DriveMin, r.WalkKm, r.WalkMin, r.StraightKm, r.Lat, r.Lon, comma,
 		)
 		rank++
 	}
@@ -736,6 +738,8 @@ func main() {
 			WalkMin:    walkMin,
 			StraightKm: straightKm,
 			Source:     source,
+			Lat:        station.Lat,
+			Lon:        station.Lon,
 		})
 	}
 
